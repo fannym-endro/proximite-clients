@@ -230,9 +230,7 @@ const MENU: { key: View; title: string; desc: string; icon: () => JSX.Element }[
 ];
 
 export default function Page() {
-  const [code, setCode] = useState("");
   const [view, setView] = useState<View>("menu");
-  useEffect(() => { const s = localStorage.getItem("endro_access_code"); if (s) setCode(s); }, []);
 
   return (
     <>
@@ -256,19 +254,14 @@ export default function Page() {
                 </button>
               ))}
             </div>
-            <details className="codegate">
-              <summary>Code d&apos;accès</summary>
-              <input type="text" placeholder="code d'équipe" value={code}
-                onChange={(e) => { setCode(e.target.value); localStorage.setItem("endro_access_code", e.target.value); }} />
-            </details>
           </>
         ) : (
           <>
             <button className="backlink" onClick={() => setView("menu")}>← Retour au menu</button>
-            {view === "proximite" && <Proximite code={code} />}
+            {view === "proximite" && <Proximite code="" />}
             {view === "offres" && <Offres />}
-            {view === "produits" && <Produits code={code} />}
-            {view === "recherches" && <Recherches code={code} />}
+            {view === "produits" && <Produits code="" />}
+            {view === "recherches" && <Recherches code="" />}
           </>
         )}
       </main>
