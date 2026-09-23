@@ -96,3 +96,48 @@ data/
   codes_postaux.json      référentiel code postal → coordonnées (embarqué)
 vercel.json               planification du cron
 ```
+
+## Encart animations (optionnel)
+
+L'app peut afficher les animations en cours et à venir, lues dans la Google Sheet
+de planning. **Ne branche pas le fichier complet** : il contient des colonnes
+financières qui n'ont rien à faire sur une page vue par les commerciaux.
+
+À la place, crée une vue publiée ne contenant que le calendrier :
+
+1. Dans la Google Sheet, crée un onglet léger (ou une vue) avec au minimum les
+   colonnes `Date` et `Animation`, et si utile `Offre spéciale`,
+   `Cadeau Contre Achat (GWP)`, `Communication`. La colonne `Date` doit être au
+   format `j/m/aaaa`.
+2. Fichier → Partager → Publier sur le web → choisis cet onglet → format
+   **CSV** → Publier. Copie l'URL générée.
+3. Mets-la dans la variable d'environnement `ANIM_CSV_URL` du projet Vercel, puis
+   redéploie.
+
+L'app affiche alors les animations des 3 derniers jours comme « en cours » et
+celles des 30 prochains jours comme « à venir ». Sans cette variable, l'encart
+reste simplement masqué.
+
+## Sections du dashboard
+
+- **Clients par code postal** — nombre de clients BtoC dans un rayon (données Shopify clients).
+- **Produits** — top produits et top 100 des paires vendues ensemble (A + B), avec périodes
+  prédéfinies (30 / 90 / 365 j) ou dates précises au jour près. Alimenté par une seconde
+  extraction Shopify (commandes des ~400 derniers jours). Cette extraction s'ajoute au cycle du
+  cron : le rafraîchissement alterne clients / commandes d'une nuit sur l'autre, donc les
+  produits apparaissent après un ou deux cycles (ou après quelques `/api/refresh` manuels).
+- **Recherches store locator** — recherches Stockist agrégées par zone, sur une carte zoomable
+  (OpenStreetMap) et en tableau, avec recherche par code postal. Les zones en rouge concentrent
+  des recherches sans résultat = zones blanches. Un premier jeu de données (ton export) est
+  embarqué ; les mises à jour passent par la page `/admin`.
+
+Chaque section affiche « Dernière mise à jour : ».
+
+## Mettre à jour les recherches Stockist (mensuel)
+
+1. Dans Stockist, page Analytics → exporter le tableur des recherches récentes (CSV).
+2. Ouvrir `/admin` sur l'app, saisir le code (`ADMIN_CODE`, ou `ACCESS_CODE` à défaut), choisir le
+   fichier, cliquer sur « Mettre à jour ». Le fichier est envoyé directement au stockage (pas de
+   limite de taille) puis agrégé ; la carte et le tableau se rafraîchissent.
+
+Variable à ajouter sur Vercel : `ADMIN_CODE` (protège `/admin`).

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Potentiel client — Endro",
+  title: "Dashboard BtoC DP — Endro",
   description:
     "Nombre de clients Endro autour d'un code postal, pour évaluer le potentiel d'un prospect.",
 };

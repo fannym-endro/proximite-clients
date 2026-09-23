@@ -59,3 +59,41 @@ export function countWithinRadius(
   nearby.sort((a, b) => b.count - a.count);
   return { total, nearby };
 }
+
+// --- Reverse-geocode : code postal le plus proche d'un point (lat, lon) ---
+let grid: Map<string, [string, number, number][]> | null = null;
+
+function buildGrid() {
+  grid = new Map();
+  for (const cp in CENTROIDS) {
+    const [la, lo] = CENTROIDS[cp];
+    const key = `${Math.round(la * 10)}:${Math.round(lo * 10)}`;
+    (grid.get(key) || grid.set(key, []).get(key)!).push([cp, la, lo]);
+  }
+}
+
+export function nearestCp(la: number, lo: number): string | null {
+  if (!grid) buildGrid();
+  let best: string | null = null;
+  let bd = Infinity;
+  const gi = Math.round(la * 10);
+  const gj = Math.round(lo * 10);
+  for (let di = -1; di <= 1; di++) {
+    for (let dj = -1; dj <= 1; dj++) {
+      const cell = grid!.get(`${gi + di}:${gj + dj}`);
+      if (!cell) continue;
+      for (const [cp, cla, clo] of cell) {
+        const d = (cla - la) ** 2 + (clo - lo) ** 2;
+        if (d < bd) {
+          bd = d;
+          best = cp;
+        }
+      }
+    }
+  }
+  return best;
+}
+
+export function allCentroids(): Record<string, [number, number]> {
+  return CENTROIDS;
+}
