@@ -19,6 +19,7 @@ function haversineKm(a: number, b: number, x: number, y: number) {
 }
 const RADII = [1, 5, 10, 20, 30, 50];
 function Maj({ iso }: { iso: string | null }) { return <p className="maj">Dernière mise à jour : {formatDate(iso)}</p>; }
+function Loading() { return <div className="loading"><span className="spinner" role="status" aria-label="Chargement" /></div>; }
 
 /* icônes */
 const IcPin = () => (<svg className="ic" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg>);
@@ -31,13 +32,16 @@ type Anim = { date: string; label: string; details: string[] };
 type AnimResp = { configured: false } | { configured: true; enCours: Anim[]; aVenir: Anim[] };
 function Offres() {
   const [data, setData] = useState<AnimResp | null>(null);
-  useEffect(() => { fetch("/api/animations").then((r) => r.json()).then(setData).catch(() => setData({ configured: false })); }, []);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => { fetch("/api/animations").then((r) => r.json()).then((d) => { setData(d); setLoading(false); }).catch(() => { setData({ configured: false }); setLoading(false); }); }, []);
   const gwp = (a: Anim) => (a.details[0] ? <div className="anim-gwp">GWP : {a.details[0]}</div> : null);
   const empty = !data || data.configured === false || (data.enCours.length === 0 && data.aVenir.length === 0);
   return (
     <section className="card-section">
       <h2 className="section-title">Offres & animations</h2>
-      {empty ? (
+      {loading ? (
+        <Loading />
+      ) : empty ? (
         <p className="lede">Aucune animation en cours ou à venir pour le moment.</p>
       ) : (
         <div className="anim-panel">
@@ -98,9 +102,10 @@ function Proximite({ code }: { code: string }) {
         </div>
         <button className="go" onClick={search} disabled={loading}>{loading ? "Recherche…" : "Rechercher"}</button>
       </div>
-      {error && <div className="msg error">{error}</div>}
-      {notReady && <div className="msg">{notReady}</div>}
-      {result && (
+      {loading && <Loading />}
+      {!loading && error && <div className="msg error">{error}</div>}
+      {!loading && notReady && <div className="msg">{notReady}</div>}
+      {!loading && result && (
         <div className="result">
           <div className="bignum">{formatFr(result.count)}</div>
           <p className="caption">client{result.count > 1 ? "s" : ""} à moins de <strong>{result.km} km</strong> du <strong>{result.cp}</strong>.</p>
@@ -120,14 +125,18 @@ function Produits({ code }: { code: string }) {
   const [period, setPeriod] = useState("365"); const [custom, setCustom] = useState(false);
   const [from, setFrom] = useState(""); const [to, setTo] = useState("");
   const [data, setData] = useState<any>(null); const [msg, setMsg] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   async function load() {
+    setLoading(true);
     const p = new URLSearchParams();
     if (custom && from && to) { p.set("from", from); p.set("to", to); } else p.set("period", period);
     if (code) p.set("code", code);
-    const res = await fetch(`/api/produits?${p}`); const d = await res.json();
-    if (d.error) { setMsg(d.error); setData(null); }
-    else if (d.ready === false) { setMsg(d.message); setData(null); }
-    else { setMsg(null); setData(d); }
+    try {
+      const res = await fetch(`/api/produits?${p}`); const d = await res.json();
+      if (d.error) { setMsg(d.error); setData(null); }
+      else if (d.ready === false) { setMsg(d.message); setData(null); }
+      else { setMsg(null); setData(d); }
+    } finally { setLoading(false); }
   }
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [period, custom, from, to]);
   return (
@@ -138,15 +147,16 @@ function Produits({ code }: { code: string }) {
         <button type="button" className="chip" aria-pressed={custom} onClick={() => setCustom(true)}>Dates précises</button>
         {custom && (<span className="daterange"><input type="date" value={from} onChange={(e) => setFrom(e.target.value)} /><span>→</span><input type="date" value={to} onChange={(e) => setTo(e.target.value)} /></span>)}
       </div>
-      {msg && <div className="msg">{msg}</div>}
-      {data && (
+      {loading && <Loading />}
+      {!loading && msg && <div className="msg">{msg}</div>}
+      {!loading && data && (
         <div className="prod-grid">
           <div><h3 className="sub">Top produits</h3><ol className="ranklist">{data.topProducts.map((p: any, i: number) => <li key={i}>{p.title}</li>)}</ol></div>
           <div><h3 className="sub">Top 20 des produits vendus ensemble</h3>
             <ol className="ranklist pairs">{data.topPairs.map((p: any, i: number) => (<li key={i}><span>{p.a}</span><span className="plus">+</span><span>{p.b}</span></li>))}</ol></div>
         </div>
       )}
-      {data && <Maj iso={data.updatedAt} />}
+      {!loading && data && <Maj iso={data.updatedAt} />}
     </section>
   );
 }
@@ -155,7 +165,8 @@ function Produits({ code }: { code: string }) {
 function Recherches({ code }: { code: string }) {
   const [data, setData] = useState<any>(null); const [cp, setCp] = useState(""); const [km, setKm] = useState(10);
   const [focus, setFocus] = useState<any>(null); const [zone, setZone] = useState<any>(null);
-  useEffect(() => { const p = new URLSearchParams(); if (code) p.set("code", code); fetch(`/api/searches?${p}`).then((r) => r.json()).then(setData).catch(() => {}); }, [code]);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => { const p = new URLSearchParams(); if (code) p.set("code", code); fetch(`/api/searches?${p}`).then((r) => r.json()).then((d) => { setData(d); setLoading(false); }).catch(() => setLoading(false)); }, [code]);
   function locate() {
     const clean = cp.replace(/\D/g, ""); if (clean.length !== 5 || !data) return;
     const center = data.zones.find((z: any) => z.cp === clean);
@@ -188,7 +199,8 @@ function Recherches({ code }: { code: string }) {
           )}
         </div>
       )}
-      {data && data.zones && (
+      {loading && <Loading />}
+      {!loading && data && data.zones && (
         <>
           <div className="legend" style={{ marginTop: 18 }}>
             <span className="key"><span className="swatch demand" /> Bien couvert</span>
