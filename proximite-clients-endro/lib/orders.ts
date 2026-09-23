@@ -113,6 +113,11 @@ export function computeTop(
     const t = (data.titles[pid] || "").toLowerCase();
     return /offert/.test(t) || /sur[- ]?mesure/.test(t);
   };
+  // Pour les produits achetés ensemble, on écarte en plus les "mini".
+  const excludedPair = (pid: string) => {
+    if (excluded(pid)) return true;
+    return /mini/.test((data.titles[pid] || "").toLowerCase());
+  };
 
   for (const day in data.unitsByDay) {
     if (day < from || day > to) continue;
@@ -134,7 +139,7 @@ export function computeTop(
   const pairList = Object.entries(pairs)
     .filter(([key]) => {
       const [a, b] = key.split("|");
-      return !excluded(a) && !excluded(b);
+      return !excludedPair(a) && !excludedPair(b);
     })
     .sort((a, b) => b[1] - a[1])
     .slice(0, topPairs)
