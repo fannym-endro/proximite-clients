@@ -13,13 +13,7 @@ const CSV_URL = process.env.ANIM_CSV_URL;
 // Colonnes du planning qu'on cherche à afficher (insensible à la casse/accents).
 const COL_DATE = ["date"];
 const COL_LABEL = ["animation"];
-const COL_DETAILS = [
-  "offre speciale",
-  "cadeau contre achat (gwp)",
-  "communication",
-  "newsletter btoc",
-  "banniere hp",
-];
+const COL_DETAILS = ["cadeau contre achat (gwp)"];
 
 function deburr(s: string) {
   return s

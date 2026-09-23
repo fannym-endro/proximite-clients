@@ -78,7 +78,9 @@ export async function GET(req: NextRequest) {
       // on relance en priorité celui qui n'a jamais tourné, sinon le plus ancien
       const startOrders = prodAt < custAt;
       const op = await startBulkQuery(startOrders ? ordersQuery(400) : CUSTOMERS_QUERY);
-      started = startOrders ? `orders:${op.id}` : `customers:${op.id}`;
+      started = op
+        ? `${startOrders ? "orders" : "customers"}:${op.id}`
+        : "extraction déjà en cours";
     }
 
     return NextResponse.json({

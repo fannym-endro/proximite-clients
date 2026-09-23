@@ -50,8 +50,8 @@ export default function SearchesMap({
       const max = zones.length ? zones[0].n : 1;
       for (const z of zones) {
         const r = 3 + 14 * Math.sqrt(z.n / max);
-        const whitespace = z.n >= 20 && z.noResult / z.n >= 0.3;
-        const color = whitespace ? "#c0392b" : "#2e7d57";
+        const whitespace = z.n >= 15 && z.noResult / z.n >= 0.25;
+        const color = whitespace ? "#dc582a" : "#6b8d73";
         const circle = L.circleMarker([z.lat, z.lng], {
           renderer: canvas,
           radius: r,
@@ -83,7 +83,7 @@ export default function SearchesMap({
       if (focusRef.current) focusRef.current.remove();
       const c = L.circle([focus.lat, focus.lng], {
         radius: focus.km * 1000,
-        color: "#14342b",
+        color: "#17392a",
         weight: 1,
         fillOpacity: 0.05,
       });

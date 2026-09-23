@@ -104,7 +104,7 @@ export async function getCurrentBulkOperation(): Promise<BulkOp | null> {
   return data.currentBulkOperation;
 }
 
-export async function startBulkQuery(query: string): Promise<BulkOp> {
+export async function startBulkQuery(query: string): Promise<BulkOp | null> {
   const data = await adminGraphql<{
     bulkOperationRunQuery: {
       bulkOperation: BulkOp | null;
@@ -122,8 +122,14 @@ export async function startBulkQuery(query: string): Promise<BulkOp> {
     { q: query }
   );
   const { bulkOperation, userErrors } = data.bulkOperationRunQuery;
-  if (userErrors?.length) throw new Error(`bulkOperationRunQuery: ${JSON.stringify(userErrors)}`);
-  if (!bulkOperation) throw new Error("bulkOperationRunQuery: aucune opération renvoyée");
+  if (userErrors?.length) {
+    // Une extraction est déjà en cours : ce n'est pas une erreur, on laissera
+    // le cron l'ingérer au prochain passage.
+    if (userErrors.some((e) => /already in progress/i.test(e.message))) {
+      return null;
+    }
+    throw new Error(`bulkOperationRunQuery: ${JSON.stringify(userErrors)}`);
+  }
   return bulkOperation;
 }
 

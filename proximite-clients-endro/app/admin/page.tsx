@@ -53,12 +53,15 @@ export default function Admin() {
 
   return (
     <main className="wrap">
-      <header className="dash-header">
-        <span className="brand">Endro</span>
-        <h1 className="dash-title">Administration</h1>
+      <header className="topbar" style={{ margin: "0 -20px 24px" }}>
+        <div className="topbar-inner">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/endro-logo.png" alt="Endro" />
+          <h1 className="dash-title">ADMINISTRATION</h1>
+        </div>
       </header>
 
-      <section className="card-section">
+      <section className="card-section" style={{ marginTop: 0 }}>
         <h2 className="section-title">Mettre à jour les recherches Stockist</h2>
         <p className="lede">
           Une fois par mois, exporter le tableur des recherches depuis la page
