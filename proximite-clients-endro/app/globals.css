@@ -186,3 +186,27 @@ button.go:focus-visible { outline: 2px solid var(--sage); outline-offset: 2px; }
 .searchtable .city { color: var(--muted); }
 .searchtable .n { text-align: right; font-weight: 600; }
 @media (max-width: 560px) { .searchtable li { grid-template-columns: 3.8rem 1fr 4rem; font-size: 14px; } }
+
+/* --- menu d'accueil --- */
+.menu-intro { color: var(--muted); margin: 26px 0 4px; font-size: 15px; }
+.menu { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 14px; }
+@media (max-width: 600px) { .menu { grid-template-columns: 1fr; } }
+.menu-card {
+  text-align: left; background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 22px; cursor: pointer;
+  display: flex; gap: 16px; align-items: flex-start; font-family: var(--sans);
+  transition: border-color .15s ease, transform .15s ease, box-shadow .15s ease;
+}
+.menu-card:hover { border-color: var(--sage); transform: translateY(-2px); box-shadow: 0 6px 18px rgba(23,57,42,.06); }
+.menu-card:focus-visible { outline: 2px solid var(--sage); outline-offset: 2px; }
+.menu-card .ic { color: var(--ink); flex: 0 0 auto; margin-top: 2px; }
+.menu-card h3 { font-family: var(--title); text-transform: uppercase; letter-spacing: .02em; font-size: 15px; color: var(--ink); margin: 0 0 5px; }
+.menu-card p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.45; }
+
+.backlink {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: none; border: none; color: var(--muted);
+  font-family: var(--sans); font-size: 14px; cursor: pointer;
+  padding: 0; margin: 24px 0 2px;
+}
+.backlink:hover { color: var(--ink); }
