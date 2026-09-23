@@ -175,15 +175,14 @@ button.go:focus-visible { outline: 2px solid var(--sage); outline-offset: 2px; }
 .legend .key { display: inline-flex; align-items: center; gap: 7px; }
 .legend .swatch { width: 12px; height: 12px; border-radius: 999px; display: inline-block; }
 .legend .swatch.demand { background: var(--sage); }
-.legend .swatch.white { background: var(--warn); }
+.legend .swatch.partial { background: var(--warn); }
+.legend .swatch.white { background: #c0392b; }
 
 /* --- tableau recherches --- */
 .searchtable { list-style: none; margin: 0; padding: 0; }
-.searchtable li { display: grid; grid-template-columns: 4.5rem 1fr 5.5rem 7.5rem; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); font-variant-numeric: tabular-nums; align-items: baseline; }
+.searchtable li { display: grid; grid-template-columns: 5rem 1fr 6rem; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); font-variant-numeric: tabular-nums; align-items: baseline; }
 .searchtable li.head { font-family: var(--title); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); font-weight: 700; }
 .searchtable .cp { font-weight: 700; color: var(--ink); }
 .searchtable .city { color: var(--muted); }
 .searchtable .n { text-align: right; font-weight: 600; }
-.searchtable .nr { text-align: right; color: var(--warn); font-weight: 700; }
-.searchtable li.head .nr { color: var(--muted); }
-@media (max-width: 560px) { .searchtable li { grid-template-columns: 3.6rem 1fr 3.5rem 4.5rem; font-size: 13px; } }
+@media (max-width: 560px) { .searchtable li { grid-template-columns: 3.8rem 1fr 4rem; font-size: 14px; } }

@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
   if (data.coveredFrom && from < data.coveredFrom) from = data.coveredFrom;
   if (data.coveredTo && to > data.coveredTo) to = data.coveredTo;
 
-  const { products, pairs } = computeTop(data, from, to, 30, 100);
+  const { products, pairs } = computeTop(data, from, to, 30, 20);
 
   return NextResponse.json({
     ready: true,

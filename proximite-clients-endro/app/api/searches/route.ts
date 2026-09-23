@@ -19,7 +19,15 @@ export async function GET(req: NextRequest) {
     .map(([cp, v]) => {
       const c = getCentroid(cp);
       return c
-        ? { cp, city: v.city, n: v.n, noResult: v.noResult, lat: c[0], lng: c[1] }
+        ? {
+            cp,
+            city: v.city,
+            n: v.n,
+            noResult: v.noResult,
+            lat: c[0],
+            lng: c[1],
+            samples: (v.samples || []).slice(0, 8),
+          }
         : null;
     })
     .filter(Boolean) as {
@@ -29,6 +37,7 @@ export async function GET(req: NextRequest) {
     noResult: number;
     lat: number;
     lng: number;
+    samples: { d: string; q: string }[];
   }[];
   zones.sort((a, b) => b.n - a.n);
 

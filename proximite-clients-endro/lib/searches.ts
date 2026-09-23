@@ -18,10 +18,12 @@ export function aggregateSearches(text: string): SearchesPayload {
   const iLat = idx("Query latitude");
   const iLng = idx("Query longitude");
   const iCity = idx("Query city");
+  const iNbhd = idx("Query neighborhood");
   const iCp = idx("Query postal code");
   const iResults = idx("Results found");
 
-  const byCp: Record<string, { n: number; noResult: number; city: string }> = {};
+  const SAMPLE_CAP = 12;
+  const byCp: SearchesPayload["byCp"] = {};
   let total = 0;
   let dmin: string | null = null;
   let dmax: string | null = null;
@@ -47,10 +49,24 @@ export function aggregateSearches(text: string): SearchesPayload {
     if (!cp) continue;
 
     total += 1;
-    const e = (byCp[cp] ||= { n: 0, noResult: 0, city: "" });
+    const e = (byCp[cp] ||= { n: 0, noResult: 0, city: "", samples: [] });
     e.n += 1;
-    if (!isNaN(results) && results === 0) e.noResult += 1;
     if (!e.city && iCity >= 0) e.city = (row[iCity] || "").trim();
+    if (!isNaN(results) && results === 0) {
+      e.noResult += 1;
+      if (e.samples && e.samples.length < SAMPLE_CAP) {
+        const q =
+          (iCity >= 0 && row[iCity]) ||
+          (iNbhd >= 0 && row[iNbhd]) ||
+          rawCp ||
+          "";
+        e.samples.push({ d: ts, q: String(q).trim() });
+      }
+    }
+  }
+
+  for (const cp in byCp) {
+    if (byCp[cp].samples && byCp[cp].samples!.length === 0) delete byCp[cp].samples;
   }
 
   return {

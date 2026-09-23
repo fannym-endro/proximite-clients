@@ -200,7 +200,7 @@ function Produits({ code }: { code: string }) {
             <ol className="ranklist">{data.topProducts.map((p: any, i: number) => <li key={i}>{p.title}</li>)}</ol>
           </div>
           <div>
-            <h3 className="sub">Top 100 des produits vendus ensemble</h3>
+            <h3 className="sub">Top 20 des produits vendus ensemble</h3>
             <ol className="ranklist pairs">
               {data.topPairs.map((p: any, i: number) => (
                 <li key={i}><span>{p.a}</span><span className="plus">+</span><span>{p.b}</span></li>
@@ -244,10 +244,15 @@ function Recherches({ code }: { code: string }) {
   return (
     <section className="card-section">
       <h2 className="section-title">Recherches store locator par zone</h2>
+      <p className="coverage">Données depuis le 23 septembre 2025.</p>
       <p className="lede">
         Où les visiteurs cherchent un point de vente Endro sur le site. Une recherche « sans résultat »
-        signifie qu&apos;aucun point de vente n&apos;a été trouvé à proximité : beaucoup de recherches et
-        beaucoup de « sans résultat » dans une zone, c&apos;est une zone blanche à prospecter.
+        signifie qu&apos;au moment de la recherche, aucun point de vente n&apos;a été trouvé assez près.
+        Beaucoup de recherches et beaucoup de « sans résultat » dans une zone, c&apos;est une zone
+        blanche à prospecter. Attention&nbsp;: comme les données couvrent douze mois, certains « sans
+        résultat » anciens ont pu être corrigés depuis par le référencement de nouveaux magasins — le
+        signal se lit donc sur la tendance d&apos;une zone, pas sur une recherche isolée. Clique sur un
+        point de la carte pour voir le détail de ses recherches sans résultat.
       </p>
 
       <div className="controls">
@@ -285,8 +290,9 @@ function Recherches({ code }: { code: string }) {
       {data && data.zones && (
         <>
           <div className="legend" style={{ marginTop: 18 }}>
-            <span className="key"><span className="swatch demand" /> Demande (recherches)</span>
-            <span className="key"><span className="swatch white" /> Zone blanche (beaucoup de recherches sans résultat)</span>
+            <span className="key"><span className="swatch demand" /> Bien couvert</span>
+            <span className="key"><span className="swatch partial" /> Couverture partielle (beaucoup de sans résultat)</span>
+            <span className="key"><span className="swatch white" /> Aucun point de vente trouvé</span>
           </div>
           <SearchesMap zones={data.zones} focus={focus} />
           <div className="nearby">
@@ -296,14 +302,12 @@ function Recherches({ code }: { code: string }) {
                 <span className="cp">Code postal</span>
                 <span className="city">Ville</span>
                 <span className="n">Recherches</span>
-                <span className="nr">Sans résultat</span>
               </li>
               {data.zones.slice(0, 10).map((z: any) => (
                 <li key={z.cp}>
                   <span className="cp">{z.cp}</span>
                   <span className="city">{z.city}</span>
                   <span className="n">{formatFr(z.n)}</span>
-                  <span className="nr">{formatFr(z.noResult)}</span>
                 </li>
               ))}
             </ul>
@@ -334,8 +338,6 @@ export default function Page() {
       </header>
 
       <main className="wrap">
-        <p className="coverage">Données depuis le 23 septembre 2025.</p>
-
         <Animations />
         <Proximite code={code} />
         <Produits code={code} />

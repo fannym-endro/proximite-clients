@@ -10,6 +10,7 @@ type Zone = {
   noResult: number;
   lat: number;
   lng: number;
+  samples?: { d: string; q: string }[];
 };
 
 export default function SearchesMap({
@@ -50,21 +51,34 @@ export default function SearchesMap({
       const max = zones.length ? zones[0].n : 1;
       for (const z of zones) {
         const r = 3 + 14 * Math.sqrt(z.n / max);
-        const whitespace = z.n >= 15 && z.noResult / z.n >= 0.25;
-        const color = whitespace ? "#dc582a" : "#6b8d73";
+        const withResult = z.n - z.noResult;
+        const share = z.n ? z.noResult / z.n : 0;
+        let color = "#6b8d73"; // bien couvert
+        if (z.noResult > 0 && withResult === 0) color = "#c0392b"; // aucun résultat
+        else if (share >= 0.3) color = "#dc582a"; // couverture partielle
+
         const circle = L.circleMarker([z.lat, z.lng], {
           renderer: canvas,
           radius: r,
           color,
           weight: 1,
           fillColor: color,
-          fillOpacity: 0.35,
+          fillOpacity: 0.4,
         });
-        circle.bindPopup(
-          `<strong>${z.cp}</strong> ${z.city || ""}<br/>${z.n} recherche${
-            z.n > 1 ? "s" : ""
-          }${z.noResult ? ` · ${z.noResult} sans résultat` : ""}`
-        );
+
+        let html = `<strong>${z.cp}</strong> ${z.city || ""}<br/>${z.n} recherche${z.n > 1 ? "s" : ""}`;
+        if (z.noResult > 0)
+          html += ` · <span style="color:#c0392b;font-weight:600">${z.noResult} sans résultat</span>`;
+        if (z.samples && z.samples.length) {
+          html +=
+            `<div style="margin-top:7px;font-size:11px;text-transform:uppercase;letter-spacing:.03em;color:#888">Sans résultat — exemples</div>` +
+            `<ul style="margin:3px 0 0;padding-left:15px;font-size:12px">` +
+            z.samples.map((s) => `<li>${s.d}${s.q ? " — " + s.q : ""}</li>`).join("") +
+            `</ul>`;
+          if (z.noResult > z.samples.length)
+            html += `<div style="font-size:11px;color:#999;margin-top:2px">… et ${z.noResult - z.samples.length} autres</div>`;
+        }
+        circle.bindPopup(html);
         circle.addTo(group);
       }
       group.addTo(mapRef.current);

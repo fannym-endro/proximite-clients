@@ -64,7 +64,10 @@ export type SearchesPayload = {
   coveredFrom: string | null;
   coveredTo: string | null;
   totalSearches: number;
-  byCp: Record<string, { n: number; noResult: number; city: string }>;
+  byCp: Record<
+    string,
+    { n: number; noResult: number; city: string; samples?: { d: string; q: string }[] }
+  >;
 };
 
 let searchesCache: { at: number; data: SearchesPayload } | null = null;

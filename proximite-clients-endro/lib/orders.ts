@@ -102,10 +102,17 @@ export function computeTop(
   from: string,
   to: string,
   topProducts = 30,
-  topPairs = 100
+  topPairs = 20
 ) {
   const units: Record<string, number> = {};
   const pairs: Record<string, number> = {};
+
+  // On écarte les cadeaux (OFFERT) et la palette découverte sur-mesure,
+  // qui faussent les classements et les associations.
+  const excluded = (pid: string) => {
+    const t = (data.titles[pid] || "").toLowerCase();
+    return /offert/.test(t) || /sur[- ]?mesure/.test(t);
+  };
 
   for (const day in data.unitsByDay) {
     if (day < from || day > to) continue;
@@ -119,11 +126,16 @@ export function computeTop(
   }
 
   const products = Object.entries(units)
+    .filter(([pid]) => !excluded(pid))
     .sort((a, b) => b[1] - a[1])
     .slice(0, topProducts)
     .map(([pid]) => ({ title: data.titles[pid] || pid }));
 
   const pairList = Object.entries(pairs)
+    .filter(([key]) => {
+      const [a, b] = key.split("|");
+      return !excluded(a) && !excluded(b);
+    })
     .sort((a, b) => b[1] - a[1])
     .slice(0, topPairs)
     .map(([key]) => {
