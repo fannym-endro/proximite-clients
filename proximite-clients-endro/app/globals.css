@@ -210,3 +210,15 @@ button.go:focus-visible { outline: 2px solid var(--sage); outline-offset: 2px; }
   padding: 0; margin: 24px 0 2px;
 }
 .backlink:hover { color: var(--ink); }
+
+/* --- indicateur de chargement --- */
+.loading { display: flex; justify-content: center; padding: 44px 0; }
+.spinner {
+  width: 30px; height: 30px;
+  border: 3px solid var(--border);
+  border-top-color: var(--ink);
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 1.8s; } }
