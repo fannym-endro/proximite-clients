@@ -13,7 +13,8 @@ const CSV_URL = process.env.ANIM_CSV_URL;
 // Colonnes du planning qu'on cherche à afficher (insensible à la casse/accents).
 const COL_DATE = ["date"];
 const COL_LABEL = ["animation"];
-const COL_DETAILS = ["cadeau contre achat (gwp)"];
+const COL_GWP = ["cadeau contre achat (gwp)"];
+const COL_OFFRE = ["offre speciale"];
 // Colonne W « Details » : on y lit la présence de « Choose ».
 const COL_CHANNEL = ["details", "detail"];
 
@@ -89,14 +90,11 @@ export async function GET() {
     const header = rows[0].map(deburr);
     const findCol = (names: string[]) =>
       header.findIndex((h) => names.includes(h));
-    const findCols = (names: string[]) =>
-      header
-        .map((h, i) => (names.includes(h) ? i : -1))
-        .filter((i) => i >= 0);
 
     const iDate = findCol(COL_DATE);
     const iLabel = findCol(COL_LABEL);
-    const iDetails = findCols(COL_DETAILS);
+    const iGwp = findCol(COL_GWP);
+    const iOffre = findCol(COL_OFFRE);
     const iChannel = findCol(COL_CHANNEL); // colonne W « Details »
     if (iDate < 0 || iLabel < 0) return NextResponse.json({ configured: false });
 
@@ -107,7 +105,8 @@ export async function GET() {
       return diff >= 0 && diff <= n;
     };
 
-    type Row = { dt: Date; label: string; details: string[] };
+    type Extra = { label: string; value: string };
+    type Row = { dt: Date; label: string; extras: Extra[]; choose: boolean };
     const enCours: Row[] = [];
     const aVenir: Row[] = [];
 
@@ -116,44 +115,44 @@ export async function GET() {
       const dt = parseDate(cells[iDate] || "");
       if (!dt) continue;
       const label = (cells[iLabel] || "").trim();
-      const details = iDetails
-        .map((i) => (cells[i] || "").trim())
-        .filter(Boolean);
+      const gwp = iGwp >= 0 ? (cells[iGwp] || "").trim() : "";
+      const offre = iOffre >= 0 ? (cells[iOffre] || "").trim() : "";
+      const extras: Extra[] = [];
+      if (gwp) extras.push({ label: "GWP", value: gwp });
+      if (offre) extras.push({ label: "Offre", value: offre });
 
       // « Choose » présent dans la colonne Details de la journée ?
       const hasChoose =
         iChannel >= 0 && /choose/.test(deburr(cells[iChannel] || ""));
 
-      if (!label && details.length === 0 && !hasChoose) continue;
+      if (!label && extras.length === 0 && !hasChoose) continue;
 
-      // Libellé affiché : on accole « Choose » quand il est là.
-      const baseLabel = label || details[0] || "";
-      const finalLabel = hasChoose
-        ? baseLabel
-          ? `${baseLabel} · Choose`
-          : "Choose"
-        : baseLabel;
-      const finalDetails = label ? details : details.slice(1);
+      const baseLabel = label || extras[0]?.value || "";
+      // Si la journée n'a que « Choose » (ni animation ni offre), on l'affiche en libellé.
+      const finalLabel = baseLabel || "Vente Choose";
+      // Badge « Choose » dès qu'il y a déjà un libellé à côté.
+      const choose = hasChoose && baseLabel !== "";
+      const finalExtras = label ? extras : extras.slice(1);
 
       const diff = (dt.getTime() - today.getTime()) / 86400000;
       if (diff >= -3 && diff <= 0) {
-        enCours.push({ dt, label: finalLabel, details: finalDetails });
+        enCours.push({ dt, label: finalLabel, extras: finalExtras, choose });
       } else if (inDays(dt, 30)) {
-        aVenir.push({ dt, label: finalLabel, details: finalDetails });
+        aVenir.push({ dt, label: finalLabel, extras: finalExtras, choose });
       }
     }
 
-    // Dédoublonnage par libellé, en gardant la 1re occurrence.
+    // Dédoublonnage par libellé : on garde la 1re occurrence, mais on
+    // conserve le badge Choose si l'un des jours de cette animation l'avait.
     const dedupe = (arr: Row[]) => {
-      const seen = new Set<string>();
-      const out: Row[] = [];
+      const map = new Map<string, Row>();
       for (const x of arr) {
         const k = x.label.toLowerCase();
-        if (seen.has(k)) continue;
-        seen.add(k);
-        out.push(x);
+        const ex = map.get(k);
+        if (!ex) map.set(k, { ...x });
+        else if (x.choose) ex.choose = true;
       }
-      return out;
+      return [...map.values()];
     };
 
     return NextResponse.json({
@@ -161,12 +160,18 @@ export async function GET() {
       enCours: dedupe(enCours).map((x) => ({
         date: fmt(x.dt),
         label: x.label,
-        details: x.details,
+        extras: x.extras,
+        choose: x.choose,
       })),
       aVenir: dedupe(aVenir)
         .sort((a, b) => a.dt.getTime() - b.dt.getTime())
         .slice(0, 6)
-        .map((x) => ({ date: fmt(x.dt), label: x.label, details: x.details })),
+        .map((x) => ({
+          date: fmt(x.dt),
+          label: x.label,
+          extras: x.extras,
+          choose: x.choose,
+        })),
     });
   } catch {
     return NextResponse.json({ configured: false });
