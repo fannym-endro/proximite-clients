@@ -28,13 +28,34 @@ const IcChart = () => (<svg className="ic" width="26" height="26" viewBox="0 0 2
 const IcSearch = () => (<svg className="ic" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>);
 
 /* ---------- offres & animations ---------- */
-type Anim = { date: string; label: string; details: string[] };
+type Anim = { date: string; label: string; extras?: { label: string; value: string }[]; choose?: boolean };
 type AnimResp = { configured: false } | { configured: true; enCours: Anim[]; aVenir: Anim[] };
+
+const chooseBadge = (a: Anim) =>
+  a.choose ? (
+    <span
+      style={{
+        display: "inline-block",
+        marginLeft: 8,
+        padding: "1px 8px",
+        borderRadius: 999,
+        background: "#17392a",
+        color: "#fff",
+        fontSize: 11,
+        fontWeight: 700,
+        letterSpacing: ".02em",
+        verticalAlign: "middle",
+      }}
+    >
+      Choose
+    </span>
+  ) : null;
+
 function Offres() {
   const [data, setData] = useState<AnimResp | null>(null);
   const [loading, setLoading] = useState(true);
   useEffect(() => { fetch("/api/animations").then((r) => r.json()).then((d) => { setData(d); setLoading(false); }).catch(() => { setData({ configured: false }); setLoading(false); }); }, []);
-  const gwp = (a: Anim) => (a.details[0] ? <div className="anim-gwp">GWP : {a.details[0]}</div> : null);
+  const extraLines = (a: Anim) => (a.extras || []).map((e, i) => (<div key={i} className="anim-gwp">{e.label} : {e.value}</div>));
   const empty = !data || data.configured === false || (data.enCours.length === 0 && data.aVenir.length === 0);
   return (
     <section className="card-section">
@@ -49,7 +70,7 @@ function Offres() {
           {data!.configured && data!.enCours.length > 0 ? (
             <ul className="anim-list">
               {data!.configured && data!.enCours.map((a, i) => (
-                <li key={i} className="anim-row"><span className="anim-dot" aria-hidden /><div><div className="anim-label">{a.label}</div>{gwp(a)}</div></li>
+                <li key={i} className="anim-row"><span className="anim-dot" aria-hidden /><div><div className="anim-label">{a.label}{chooseBadge(a)}</div>{extraLines(a)}</div></li>
               ))}
             </ul>
           ) : <p className="anim-empty">Aucune animation active aujourd&apos;hui.</p>}
@@ -58,7 +79,7 @@ function Offres() {
               <h3>À venir</h3>
               <ul className="anim-list">
                 {data!.aVenir.map((a, i) => (
-                  <li key={i} className="anim-row"><span className="anim-date">{a.date}</span><div><div className="anim-label">{a.label}</div>{gwp(a)}</div></li>
+                  <li key={i} className="anim-row"><span className="anim-date">{a.date}</span><div><div className="anim-label">{a.label}{chooseBadge(a)}</div>{extraLines(a)}</div></li>
                 ))}
               </ul>
             </div>
