@@ -14,11 +14,13 @@ const CSV_URL = process.env.ANIM_CSV_URL;
 const COL_DATE = ["date"];
 const COL_LABEL = ["animation"];
 const COL_DETAILS = ["cadeau contre achat (gwp)"];
+// Colonne W « Details » : on y lit la présence de « Choose ».
+const COL_CHANNEL = ["details", "detail"];
 
 function deburr(s: string) {
   return s
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[̀-ͯ]/g, "")
     .trim()
     .toLowerCase();
 }
@@ -95,6 +97,7 @@ export async function GET() {
     const iDate = findCol(COL_DATE);
     const iLabel = findCol(COL_LABEL);
     const iDetails = findCols(COL_DETAILS);
+    const iChannel = findCol(COL_CHANNEL); // colonne W « Details »
     if (iDate < 0 || iLabel < 0) return NextResponse.json({ configured: false });
 
     const today = new Date();
@@ -116,13 +119,27 @@ export async function GET() {
       const details = iDetails
         .map((i) => (cells[i] || "").trim())
         .filter(Boolean);
-      if (!label && details.length === 0) continue;
+
+      // « Choose » présent dans la colonne Details de la journée ?
+      const hasChoose =
+        iChannel >= 0 && /choose/.test(deburr(cells[iChannel] || ""));
+
+      if (!label && details.length === 0 && !hasChoose) continue;
+
+      // Libellé affiché : on accole « Choose » quand il est là.
+      const baseLabel = label || details[0] || "";
+      const finalLabel = hasChoose
+        ? baseLabel
+          ? `${baseLabel} · Choose`
+          : "Choose"
+        : baseLabel;
+      const finalDetails = label ? details : details.slice(1);
 
       const diff = (dt.getTime() - today.getTime()) / 86400000;
       if (diff >= -3 && diff <= 0) {
-        enCours.push({ dt, label: label || details[0], details: label ? details : details.slice(1) });
+        enCours.push({ dt, label: finalLabel, details: finalDetails });
       } else if (inDays(dt, 30)) {
-        aVenir.push({ dt, label: label || details[0], details: label ? details : details.slice(1) });
+        aVenir.push({ dt, label: finalLabel, details: finalDetails });
       }
     }
 
